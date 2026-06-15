@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natter Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 400px; height: 500px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #007bff; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; }
+        .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: #e4e6eb; padding: 10px; border-radius: 10px; max-width: 75%; width: fit-content; }
+        .msg.me { background: #007bff; color: white; align-self: flex-end; }
+        .msg-meta { font-size: 0.75rem; color: gray; margin-bottom: 3px; }
+        .msg.me .msg-meta { color: #e0e0e0; }
+        .chat-input { display: flex; padding: 10px; background: #eee; border-top: 1px solid #ddd; gap: 5px; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        #user-input { width: 80px; }
+        #text-input { flex: 1; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">💬 Natter Cloud Chat</div>
+    <div class="messages" id="messages-box"></div>
+    <div class="chat-input">
+        <input type="text" id="user-input" placeholder="Nick" value="User">
+        <input type="text" id="text-input" placeholder="Napisz..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Wyślij</button>
+    </div>
+</div>
+
+<script>
+    // ⚠️ TUTAJ WKLEJ SWÓJ ADRES URL Z RAILWAY (bez ukośnika na końcu)
+    const API_URL = 'https://natter-production.up.railway.app'; 
+
+    async function loadMessages() {
+        try {
+            const response = await fetch(`${API_URL}/messages`);
+            const messages = await response.json();
+            const box = document.getElementById('messages-box');
+            
+            // Zapamiętaj pozycję przewijania przed aktualizacją
+            const isScrolledToBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 1;
+
+            box.innerHTML = '';
+            const myNick = document.getElementById('user-input').value;
+
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                const isMe = msg.user === myNick;
+                div.className = `msg ${isMe ? 'me' : ''}`;
+                div.innerHTML = `<div class="msg-meta"><b>${msg.user}</b></div><div>${msg.text}</div>`;
+                box.appendChild(div);
+            });
+
+            if (isScrolledToBottom) {
+                box.scrollTop = box.scrollHeight;
+            }
+        } catch (err) {
+            console.error('Błąd pobierania danych:', err);
+        }
+    }
+
+    async function sendMessage() {
+        const userField = document.getElementById('user-input');
+        const textField = document.getElementById('text-input');
+        
+        if (!textField.value.trim()) return;
+
+        try {
+            await fetch(`${API_URL}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: userField.value, text: textField.value })
+            });
+            textField.value = '';
+            loadMessages();
+        } catch (err) {
+            console.error('Błąd wysyłania:', err);
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    // Odświeżaj czat automatycznie co 2 sekundy
+    setInterval(loadMessages, 2000);
+    // Pierwsze załadowanie
+    loadMessages();
+</script>
+
+</body>
+</html>
