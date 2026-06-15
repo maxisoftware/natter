@@ -1,5 +1,5 @@
 {
-  "name": "whisper-backend-node",
+  "name": "natter-backend-node",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
