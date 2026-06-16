@@ -39,7 +39,7 @@ await initDB();
 app.get('/messages', async (req, res) => {
     try {
         const connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.query("SELECT * FROM messages ORDER BY created_at ASC");
+        const [rows] = await connection.query("SELECT * FROM messages ORDER BY created_at DESC");
         await connection.end();
         res.json(rows);
     } catch (error) {
